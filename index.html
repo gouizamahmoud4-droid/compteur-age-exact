@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compteur d'âge exact</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    text-align: center;
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    color: #fff;
+    margin: 0;
+    padding: 50px 20px;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  input, button {
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
+  }
+  input { width: 200px; }
+  button {
+    background-color: #ff9800;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover { background-color: #e68900; }
+  #result {
+    margin-top: 30px;
+    font-size: 22px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.3);
+    display: inline-block;
+    padding: 15px 20px;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+<h1>Compteur d'âge exact</h1>
+<p>Entrez votre date de naissance :</p>
+<input type="date" id="birthDate">
+<button onclick="calculateAge()">Calculer</button>
+<button onclick="copyResult()">Copier le résultat</button>
+
+<div id="result"></div>
+
+<script>
+function calculateAge() {
+    const birthDate = new Date(document.getElementById('birthDate').value);
+    if (!birthDate.getTime()) {
+        document.getElementById('result').innerText = "Veuillez entrer une date valide !";
+        return;
+    }
+
+    const now = new Date();
+    let years = now.getFullYear() - birthDate.getFullYear();
+    let months = now.getMonth() - birthDate.getMonth();
+    let days = now.getDate() - birthDate.getDate();
+    let hours = now.getHours() - birthDate.getHours();
+    let minutes = now.getMinutes() - birthDate.getMinutes();
+
+    if (minutes < 0) { hours -= 1; minutes += 60; }
+    if (hours < 0) { days -= 1; hours += 24; }
+    if (days < 0) { months -= 1; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+    if (months < 0) { years -= 1; months += 12; }
+
+    document.getElementById('result').innerText = 
+        `Vous avez ${years} ans, ${months} mois, ${days} jours, ${hours} heures et ${minutes} minutes.`;
+}
+
+function copyResult() {
+    const resultText = document.getElementById('result').innerText;
+    if(resultText) {
+        navigator.clipboard.writeText(resultText);
+        alert("Résultat copié !");
+    }
+}
+</script>
+</body>
+</html>
