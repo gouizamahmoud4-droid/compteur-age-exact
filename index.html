@@ -1,87 +1,236 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compteur d'âge exact</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    text-align: center;
-    background: linear-gradient(to right, #00c6ff, #0072ff);
-    color: #fff;
-    margin: 0;
-    padding: 50px 20px;
-  }
-  h1 {
-    margin-bottom: 20px;
-  }
-  input, button {
-    padding: 10px;
-    font-size: 16px;
-    margin: 5px;
-    border-radius: 5px;
-    border: none;
-  }
-  input { width: 200px; }
-  button {
-    background-color: #ff9800;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  button:hover { background-color: #e68900; }
-  #result {
-    margin-top: 30px;
-    font-size: 22px;
-    font-weight: bold;
-    background: rgba(0,0,0,0.3);
-    display: inline-block;
-    padding: 15px 20px;
-    border-radius: 10px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ton âge en un clin d’œil</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    input[type="date"] {
+      padding: 0.7rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+    }
+
+    input[type="date"]:focus {
+      border-color: #ff385c;
+    }
+
+    button {
+      background: #ff385c;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin: 0.5rem;
+    }
+
+    button:hover {
+      background: #e31c5f;
+    }
+
+    .block {
+      background: #f9f9f9;
+      padding: 1rem 1.5rem;
+      border-radius: 15px;
+      margin: 1rem 0;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      display: none; /* caché par défaut */
+    }
+
+    .block-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .highlight {
+      color: #ff385c;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: inline-block;
+      min-width: 35px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .countdown span {
+      font-weight: bold;
+      color: #ff385c;
+      font-size: 1.1rem;
+      margin: 0 4px;
+    }
+  </style>
 </head>
 <body>
-<h1>Compteur d'âge exact</h1>
-<p>Entrez votre date de naissance :</p>
-<input type="date" id="birthDate">
-<button onclick="calculateAge()">Calculer</button>
-<button onclick="copyResult()">Copier le résultat</button>
+  <div class="container">
+    <h1>Ton âge en un clin d’œil</h1>
+    <input type="date" id="birthdate">
+    <div>
+      <button onclick="calculateAge()">Calculer</button>
+      <button onclick="resetForm()">Réinitialiser</button>
+    </div>
 
-<div id="result"></div>
+    <!-- Bloc Âge exact -->
+    <div class="block" id="ageBlock">
+      <div class="block-title">Âge exact :</div>
+      <div id="ageText">--</div>
+    </div>
 
-<script>
-function calculateAge() {
-    const birthDate = new Date(document.getElementById('birthDate').value);
-    if (!birthDate.getTime()) {
-        document.getElementById('result').innerText = "Veuillez entrer une date valide !";
+    <!-- Bloc Jour de naissance -->
+    <div class="block" id="birthDayBlock">
+      <div class="block-title">Jour de naissance :</div>
+      <div><span id="birth-day-name" class="highlight">--</span></div>
+    </div>
+
+    <!-- Bloc Prochain anniversaire -->
+    <div class="block countdown" id="nextBirthdayBlock">
+      <div class="block-title">Prochain anniversaire :</div>
+      <div id="nextBirthday">--</div>
+    </div>
+  </div>
+
+  <script>
+    let countdownInterval;
+
+    function animateValue(id, start, end, duration, callback) {
+      const obj = document.getElementById(id);
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        obj.innerText = value;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else if (callback) {
+          callback();
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function showDayName(id, dayName) {
+      const obj = document.getElementById(id);
+      obj.style.opacity = 0;
+      obj.innerText = dayName;
+      obj.style.transition = "opacity 1s, transform 0.5s";
+      obj.style.transform = "scale(1.2)";
+      setTimeout(() => {
+        obj.style.opacity = 1;
+        obj.style.transform = "scale(1)";
+      }, 50);
+    }
+
+    function calculateAge() {
+      const birthdateInput = document.getElementById("birthdate").value;
+      if (!birthdateInput) {
+        alert("⚠️ Merci de choisir une date.");
         return;
+      }
+
+      const birthDate = new Date(birthdateInput);
+      const today = new Date();
+
+      let years = today.getFullYear() - birthDate.getFullYear();
+      let months = today.getMonth() - birthDate.getMonth();
+      let days = today.getDate() - birthDate.getDate();
+
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const daysOfWeek = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+      const birthDayName = daysOfWeek[birthDate.getDay()];
+
+      // Afficher les blocs
+      document.getElementById("ageBlock").style.display = "block";
+      document.getElementById("birthDayBlock").style.display = "block";
+      document.getElementById("nextBirthdayBlock").style.display = "block";
+
+      // Phrase complète dans bloc âge exact
+      document.getElementById("ageText").innerHTML = 
+        `Tu as <span id="ani-years" class="highlight">0</span> ans, 
+         <span id="ani-months" class="highlight">0</span> mois et 
+         <span id="ani-days" class="highlight">0</span> jours.`;
+
+      // Animation cascade
+      animateValue("ani-years", 0, years, 2000, () => {
+        animateValue("ani-months", 0, months, 1500, () => {
+          animateValue("ani-days", 0, days, 1500, () => {
+            showDayName("birth-day-name", birthDayName);
+          });
+        });
+      });
+
+      // Compte à rebours prochain anniversaire
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      function updateCountdown() {
+        const now = new Date();
+        let next = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+        if (next < now) next.setFullYear(now.getFullYear() + 1);
+        const diff = next - now;
+
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+
+        document.getElementById("nextBirthday").innerHTML =
+          `<span>${d}j</span> <span>${h}h</span> <span>${m}m</span> <span>${s}s</span>`;
+      }
+
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
     }
 
-    const now = new Date();
-    let years = now.getFullYear() - birthDate.getFullYear();
-    let months = now.getMonth() - birthDate.getMonth();
-    let days = now.getDate() - birthDate.getDate();
-    let hours = now.getHours() - birthDate.getHours();
-    let minutes = now.getMinutes() - birthDate.getMinutes();
-
-    if (minutes < 0) { hours -= 1; minutes += 60; }
-    if (hours < 0) { days -= 1; hours += 24; }
-    if (days < 0) { months -= 1; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
-    if (months < 0) { years -= 1; months += 12; }
-
-    document.getElementById('result').innerText = 
-        `Vous avez ${years} ans, ${months} mois, ${days} jours, ${hours} heures et ${minutes} minutes.`;
-}
-
-function copyResult() {
-    const resultText = document.getElementById('result').innerText;
-    if(resultText) {
-        navigator.clipboard.writeText(resultText);
-        alert("Résultat copié !");
+    function resetForm() {
+      document.getElementById("birthdate").value = "";
+      document.getElementById("ageBlock").style.display = "none";
+      document.getElementById("birthDayBlock").style.display = "none";
+      document.getElementById("nextBirthdayBlock").style.display = "none";
+      if (countdownInterval) clearInterval(countdownInterval);
     }
-}
-</script>
+  </script>
 </body>
 </html>
